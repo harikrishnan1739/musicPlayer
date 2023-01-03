@@ -1,4 +1,4 @@
-// ignore_for_file: unnecessary_brace_in_string_interps
+// ignore_for_file: unnecessary_brace_in_string_interps, unused_local_variable
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/adapters.dart';
@@ -27,12 +27,10 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     requestPermission();
-    buildFoodShimmer();
   }
 
   @override
   void dispose() {
-    buildFoodShimmer();
     requestPermission();
     super.dispose();
   }
@@ -40,6 +38,7 @@ class _HomePageState extends State<HomePage> {
   // ignore: unused_field
   final OnAudioQuery _audioQuery = OnAudioQuery();
   final AudioPlayer _audioPlayer = AudioPlayer();
+  var box = Hive.box('favorites');
 
   var songsList = [];
   int currentIndex = 0;
@@ -80,23 +79,11 @@ class _HomePageState extends State<HomePage> {
                     ),
                   );
                 },
-                icon: const Icon(Icons.favorite_border),
+                icon: const Icon(Icons.favorite_border,color: Colors.red,),
               ),
             ),
+            
           ),
-          Padding(
-            padding: const EdgeInsets.only(right: 10.0),
-            // ignore: avoid_unnecessary_containers
-            child: Container(
-              child: IconButton(
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.search_outlined,
-                  size: 27,
-                ),
-              ),
-            ),
-          )
         ],
         title: Text(
           'My Playlist',
@@ -107,8 +94,8 @@ class _HomePageState extends State<HomePage> {
       ),
       body: ValueListenableBuilder(
         valueListenable: Hive.box('favorites').listenable(),
+        // ignore: duplicate_ignore
         builder: (context, box, child) {
-          // ignore: unused_local_variable
           return FutureBuilder<List<SongModel>>(
             future: _audioQuery.querySongs(
                 sortType: null,
@@ -117,29 +104,32 @@ class _HomePageState extends State<HomePage> {
                 ignoreCase: true),
             builder: (context, item) {
               // ignore: unused_local_variable
-              final isFavorite = box.get(item) != null;
 
               if (item.data == null) {
                 return Center(
                   child: ListView.builder(
                     itemCount: item.data?.length,
                     itemBuilder: (context, index) {
-                      return buildFoodShimmer();
+                      return const Center(
+                          child: Text(
+                        'Empty Songs',
+                        style: TextStyle(fontWeight: FontWeight.w400),
+                      ));
                     },
                   ),
                 );
               }
               if (item.data!.isEmpty) {
                 return const Center(
-                  child: Text('☹ \n No songs found',
-                      style: TextStyle(color: Colors.white, fontSize: 16)),
-                );
+                    child: Text(
+                  'Empty Songs',
+                  style: TextStyle(fontWeight: FontWeight.w400),
+                ));
               }
 
               return ListView.builder(
                 itemBuilder: (context, index) {
-                  var fav = item.data?[index].title ?? '';
-                  print("!!!!!!!!!!!!!!!!!!!!!!${item.data![index]}");
+                  final fav = item.data?[index].title ?? '';
                   return ListTile(
                     tileColor: Colors.black,
                     textColor: const Color.fromARGB(255, 255, 255, 255),
@@ -153,11 +143,9 @@ class _HomePageState extends State<HomePage> {
                             audioPlayer: _audioPlayer,
                             songsList: item.data,
                             currentIndex: index,
-                          
                           ),
                         ),
                       );
-                      
                     },
                     leading: const Icon(
                       Icons.music_note_outlined,
@@ -173,10 +161,47 @@ class _HomePageState extends State<HomePage> {
                             color: Color.fromARGB(255, 110, 231, 152),
                             fontWeight: FontWeight.w500)),
                     trailing: IconButton(
-                      onPressed: () {
-                        provider.toggleFavorite(fav);
+                      onPressed: () async {
+                        ScaffoldMessenger.of(context).clearSnackBars();
+                        var isfavorite = box.get(index) != null;
+
+                        if (isfavorite) {
+                          await box.delete(index);
+                          const snackBar = SnackBar(
+                            elevation: 0,
+                            backgroundColor: Color.fromARGB(255, 236, 51, 9),
+                            animation: kAlwaysCompleteAnimation,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  topRight: Radius.circular(20)),
+                            ),
+                            content: Text("Removed Successfully"),
+                          );
+                          // ignore: use_build_context_synchronously
+                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                        } else {
+                          await box.put(index, fav);
+
+                          const snackBar = SnackBar(
+                            elevation: 0,
+                            backgroundColor: Color.fromARGB(255, 64, 249, 47),
+                            animation: kAlwaysCompleteAnimation,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  topRight: Radius.circular(20)),
+                            ),
+                            content: Text("Added Successfully"),
+                          );
+                          // ignore: use_build_context_synchronously
+                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                        }
+                        print(
+                            "TRUE OR FALSE FIELD  : ${provider.isExistItemInHive(index)}");
+                        print("PUT INDEX number : ${index}");
                       },
-                      icon: provider.isExist(fav)
+                      icon: provider.isExistItemInHive(index)
                           ? const Icon(Icons.favorite, color: Colors.red)
                           : const Icon(
                               Icons.favorite_border,
@@ -194,20 +219,24 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget buildFoodShimmer() => ListView.builder(
-        itemBuilder: (context, index) => ListTile(
-          leading: ShimmerWidget.circular(
-            width: 64,
-            height: 64,
-            shapeBorder: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+  Future<void> buildFoodShimmer() async {
+    await Future.delayed(Duration(seconds: 3));
+    ListView.builder(
+      itemBuilder: (context, index) => ListTile(
+        leading: ShimmerWidget.circular(
+          width: 64,
+          height: 64,
+          shapeBorder: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          title: const ShimmerWidget.rectangular(height: 16),
-          subtitle: const ShimmerWidget.rectangular(height: 14),
         ),
-        itemCount: 10,
-      );
+        title: const ShimmerWidget.rectangular(height: 16),
+        subtitle: const ShimmerWidget.rectangular(height: 14),
+      ),
+      itemCount: 10,
+    );
+  }
+
   void requestPermission() {
     Permission.storage.request();
   }

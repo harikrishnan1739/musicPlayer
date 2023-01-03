@@ -1,28 +1,29 @@
+// ignore_for_file: unnecessary_brace_in_string_interps
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 
 class FavoriteProvider extends ChangeNotifier {
-  List<String> _item = [];
-  List<String> get favs => _item;
+  var box = Hive.box("favorites");
+  Box get index => box;
 
-  void toggleFavorite(String fav) {
-    final isExist = _item.contains(fav);
-    if (isExist) {
-      _item.remove(fav);
-    } else {
-      _item.add(fav);
-    }
+  Future<void> clearFavortie(int index) async {
+    final indexKey = box.keyAt(index);
+    box.delete(indexKey);
     notifyListeners();
   }
 
-  void clearFavortie() {
-    _item = [];
-    notifyListeners();
+  bool isExistItemInHive(int index) {
+    final isExistInHive = box.containsKey(index);
+    box.get(index);
+    return isExistInHive;
   }
 
-  bool isExist(String fav) {
-    final isExist = _item.contains(fav);
-    return isExist;
+  bool isExistItemInHiveFav(int index) {
+    final keyIndex = box.keyAt(index);
+    final isExistInHive = box.containsKey(keyIndex);
+    box.get(index);
+    return isExistInHive;
   }
 
   static FavoriteProvider of(

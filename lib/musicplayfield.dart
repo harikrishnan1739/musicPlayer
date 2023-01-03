@@ -25,7 +25,7 @@ class _NowPlayingState extends State<NowPlaying> {
   Duration _duration = const Duration();
   Duration _position = const Duration();
   bool _isplaying = false;
-  Color _iconColor = Colors.grey;
+  Color _suffle = Colors.grey;
   Color _repeat = Colors.grey;
   int _currentIndex = 0;
 
@@ -87,6 +87,7 @@ class _NowPlayingState extends State<NowPlaying> {
                   Container(
                     child: IconButton(
                       onPressed: () {
+                        
                         Navigator.pop(context);
                       },
                       icon: const Icon(Icons.arrow_back_ios_new),
@@ -125,7 +126,8 @@ class _NowPlayingState extends State<NowPlaying> {
                         widget.songsList[widget.currentIndex].artist,
                         semanticsLabel: toString() == "<unknown>"
                             ? 'Unknown Artist'
-                            : widget.songsList[widget.currentIndex].artist.toString(),
+                            : widget.songsList[widget.currentIndex].artist
+                                .toString(),
                         overflow: TextOverflow.fade,
                         maxLines: 1,
                         style: const TextStyle(
@@ -135,13 +137,32 @@ class _NowPlayingState extends State<NowPlaying> {
                   ],
                 ),
               ),
-              // ignore: prefer_const_constructors
-              SizedBox(
-                height: 10,
-              ),
               const SizedBox(
-                height: 130,
+                height: 115,
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        if (_repeat == Colors.grey) {
+                          _repeat = const Color.fromARGB(255, 31, 169, 255);
+                          playLoop();
+                        } else {
+                          _repeat = Colors.grey;
+                          playLoopStop();
+                        }
+                      });
+                    },
+                    icon: Icon(
+                      Icons.repeat_one_rounded,
+                      color: _repeat,
+                    ),
+                  ),
+                ],
+              ),
+              // ignore: prefer_const_constructors
               Row(
                 children: [
                   Text(
@@ -239,46 +260,6 @@ class _NowPlayingState extends State<NowPlaying> {
                   ),
                 ],
               ),
-              //-----------------------------------------------------
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      setState(
-                        () {
-                          if (_iconColor == Colors.grey) {
-                            _iconColor = Colors.red;
-                          } else {
-                            _iconColor = Colors.grey;
-                          }
-                        },
-                      );
-                    },
-                    icon: Icon(
-                      Icons.favorite_outline_rounded,
-                      color: _iconColor,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        if (_repeat == Colors.grey) {
-                          _repeat = const Color.fromARGB(255, 31, 169, 255);
-                          playLoop();
-                        } else {
-                          _repeat = Colors.grey;
-                          playLoopStop();
-                        }
-                      });
-                    },
-                    icon: Icon(
-                      Icons.repeat_one_rounded,
-                      color: _repeat,
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
@@ -322,27 +303,36 @@ class _NowPlayingState extends State<NowPlaying> {
 
 //-----------next-song-----------
   void next() async {
-    setState(() async {
-      int songsLength = widget.songsList.length;
+    setState(
+      () async {
+        int songsLength = widget.songsList.length;
 
-      _currentIndex = (_currentIndex + 1) % songsLength;
+        _currentIndex = (_currentIndex + 1) % songsLength;
 
-      var selectedSong = widget.songsList[_currentIndex].data;
+        var selectedSong = widget.songsList[_currentIndex].data;
 
-      await widget.audioPlayer.setUrl(selectedSong);
-    });
+        await widget.audioPlayer.setUrl(selectedSong);
+      },
+    );
   }
 
 //-----------previous-song-----------
   void prev() {
-    setState(() async {
-      int songsLength = widget.songsList.length;
+    setState(
+      () async {
+        int songsLength = widget.songsList.length;
 
-      _currentIndex = (_currentIndex - 1) % songsLength;
+        _currentIndex = (_currentIndex - 1) % songsLength;
 
-      var selectedSong = widget.songsList[_currentIndex].data;
+        var selectedSong = widget.songsList[_currentIndex].data;
 
-      await widget.audioPlayer.setUrl(selectedSong);
-    });
+        await widget.audioPlayer.setUrl(selectedSong);
+      },
+    );
+  }
+
+//--------all-songs--_suffle------
+  void shufflesongs() {
+    widget.audioPlayer.shuffle();
   }
 }
